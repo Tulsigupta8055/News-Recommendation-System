@@ -9,7 +9,7 @@ st.set_page_config(page_title="Live News Recommendation System", layout="wide")
 st.title("📰 Live News Recommendation & Reader")
 
 # Enter your NewsAPI key here
-API_KEY = "YOUR_NEWSAPI_KEY_HERE"  # <-- Apni API Key yahan paste karein
+API_KEY = "c73d46f022404d57947189d9e4814c30"  
 
 @st.cache_data(ttl=3600)
 def fetch_live_news():
