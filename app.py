@@ -18,7 +18,7 @@ API_KEY = "YOUR_NEWSAPI_KEY_HERE"
 
 @st.cache_data(ttl=3600)
 def fetch_news():
-    if API_KEY and API_KEY != "YOUR_NEWSAPI_KEY_HERE":
+    if API_KEY and API_KEY != "c73d46f022404d57947189d9e4814c30":
         try:
             url = f"https://newsapi.org/v2/top-headlines?country=in&apiKey={API_KEY}"
             response = requests.get(url, timeout=5)
