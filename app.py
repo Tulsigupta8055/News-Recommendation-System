@@ -8,12 +8,10 @@ from sklearn.metrics.pairwise import cosine_similarity
 st.set_page_config(page_title="News Recommendation System", layout="wide")
 st.title("📰 News Recommendation System & Reader")
 
-# Optional: Add NewsAPI key if running locally or using a paid key
-API_KEY = "c73d46f022404d57947189d9e4814c30"  
+API_KEY = "c73d46f022404d57947189d9e4814c30"  # Optional NewsAPI key
 
 @st.cache_data(ttl=3600)
 def fetch_news():
-    # Try fetching live news via API first
     if API_KEY and API_KEY != "YOUR_NEWSAPI_KEY_HERE":
         try:
             url = f"https://newsapi.org/v2/top-headlines?country=in&apiKey={API_KEY}"
@@ -36,7 +34,7 @@ def fetch_news():
         except Exception:
             pass
 
-    # Fallback to local CSV dataset with image/link defaults if API fails or fails on Cloud
+    # Fallback to local CSV dataset
     df_csv = pd.read_csv("News.csv")
     if "Description" not in df_csv.columns:
         df_csv["Description"] = df_csv["Title"] + " - Read detailed coverage on this top story."
@@ -49,7 +47,7 @@ def fetch_news():
 try:
     data = fetch_news()
 
-    # Build Recommendation Engine
+    # Build TF-IDF Similarity Matrix
     @st.cache_resource
     def build_model(df):
         tfidf = TfidfVectorizer(stop_words="english")
@@ -58,14 +56,17 @@ try:
         return cosine_similarity(tfidf_matrix)
 
     similarity = build_model(data)
-    indices = pd.Series(data.index, index=data["Title"]).drop_duplicates()
 
-    # News Selector
+    # UI Dropdown
     st.subheader("🔍 Select a News Article:")
-    selected_title = st.selectbox("Choose Headline:", options=data["Title"].values)
+    selected_idx = st.selectbox(
+        "Choose Headline:", 
+        options=list(range(len(data))), 
+        format_func=lambda x: data.iloc[x]["Title"]
+    )
 
     # Main Article View
-    selected_article = data[data["Title"] == selected_title].iloc[0]
+    selected_article = data.iloc[selected_idx]
     st.markdown("---")
     st.subheader(f"📌 {selected_article['Title']}")
     
@@ -77,16 +78,18 @@ try:
         st.write(selected_article["Description"])
         st.markdown(f"[👉 **Read Full Article Here**]({selected_article['URL']})")
 
-    # Recommendations
+    # Recommendations (Pick unique non-repeating recommendations)
     st.markdown("---")
     st.subheader("💡 Related Recommendations:")
     
-    idx = indices[selected_title]
-    sim_scores = list(enumerate(similarity[idx]))
-    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)[1:4]
+    sim_scores = list(enumerate(similarity[selected_idx]))
+    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+    
+    # Filter out current article and fetch top 3 unique ones
+    rec_indices = [i[0] for i in sim_scores if i[0] != selected_idx][:3]
     
     rec_cols = st.columns(3)
-    for i, (rec_idx, score) in enumerate(sim_scores):
+    for i, rec_idx in enumerate(rec_indices):
         rec_item = data.iloc[rec_idx]
         with rec_cols[i]:
             rec_img = rec_item["Image"] if pd.notna(rec_item["Image"]) else "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=500"
