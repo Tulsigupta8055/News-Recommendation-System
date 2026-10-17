@@ -9,7 +9,7 @@ st.set_page_config(page_title="Live News Recommendation System", layout="wide")
 st.title("📰 Live News Recommendation & Reader")
 
 # Enter your NewsAPI key here
-API_KEY = "c73d46f022404d57947189d9e4814c30"  
+API_KEY = "c73d46f022404d57947189d9e4814c30"  # <-- Apni 32 digit API Key yahan quotes ke andar rakhein
 
 @st.cache_data(ttl=3600)
 def fetch_live_news():
@@ -34,7 +34,7 @@ try:
     data = fetch_live_news()
 
     if data.empty:
-        st.warning("News load nahi ho pa rahi hai. Kripya API Key check karein.")
+        st.warning("News load nahi ho pa rahi hai. Kripya API Key aur internet connection check karein.")
     else:
         # Build Recommendation Model
         @st.cache_resource
@@ -79,13 +79,9 @@ try:
             with rec_cols[i]:
                 if rec_item["Image"]:
                     st.image(rec_item["Image"], use_container_width=True)
-                st.bold(rec_item["Title"])
-                st.caption(rec_item["Description"][:100] + "...")
+                st.markdown(f"**{rec_item['Title']}**")
+                st.caption(f"{rec_item['Description'][:100]}...")
                 st.markdown(f"[Read Article]({rec_item['URL']})")
 
 except Exception as e:
     st.error(f"Error: {e}")
-            st.write(f"**{i}.** {news}")
-
-except Exception as e:
-    st.error(f"Error loading application: {e}")
